@@ -8,6 +8,8 @@ import android.widget.Toast
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import ru.gav1s.picoftheday2.R
 import ru.gav1s.picoftheday2.databinding.BottomNavigationLayoutBinding
+import ru.gav1s.picoftheday2.ui.main.MainFragment
+import ru.gav1s.picoftheday2.ui.temp.CollapsingFragment
 
 class BottomNavigationDrawerFragment : BottomSheetDialogFragment() {
     private lateinit var binding: BottomNavigationLayoutBinding
@@ -26,7 +28,12 @@ class BottomNavigationDrawerFragment : BottomSheetDialogFragment() {
 
         navigationView.setNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.navigation_one -> Toast.makeText(context, "1", Toast.LENGTH_SHORT).show()
+                R.id.navigation_one -> {
+                    Toast.makeText(context, "1", Toast.LENGTH_SHORT).show()
+                    activity?.supportFragmentManager?.beginTransaction()
+                        ?.replace(R.id.container, CollapsingFragment.newInstance())
+                        ?.commitNow()
+                }
                 R.id.navigation_two -> Toast.makeText(context, "2", Toast.LENGTH_SHORT).show()
             }
             true
