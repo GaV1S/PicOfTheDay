@@ -5,38 +5,43 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.*
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.transition.ChangeBounds
+import androidx.transition.ChangeImageTransform
+import androidx.transition.TransitionManager
+import androidx.transition.TransitionSet
 import coil.load
 import com.google.android.material.bottomappbar.BottomAppBar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.core.parameter.parametersOf
 import ru.gav1s.picoftheday2.R
-import ru.gav1s.picoftheday2.R.databinding.MainFragmentStartBinding
-import ru.gav1s.picoftheday2.R.model.PictureOfTheDayData
-import ru.gav1s.picoftheday2.R.model.repository.PODRetrofitImpl
-import ru.gav1s.picoftheday2.R.ui.MainActivity
-import ru.gav1s.picoftheday2.R.ui.nav_fragment.BottomNavigationDrawerFragment
-import ru.gav1s.picoftheday2.R.ui.settings.SettingsFragment
+import ru.gav1s.picoftheday2.databinding.MainFragmentBinding
+import ru.gav1s.picoftheday2.model.PictureOfTheDayData
+import ru.gav1s.picoftheday2.model.repository.PODRetrofitImpl
+import ru.gav1s.picoftheday2.ui.MainActivity
+import ru.gav1s.picoftheday2.ui.nav_fragment.BottomNavigationDrawerFragment
+import ru.gav1s.picoftheday2.ui.settings.SettingsFragment
 
 class MainFragment : Fragment() {
 
-    private lateinit var binding: MainFragmentStartBinding
+    private lateinit var binding: MainFragmentBinding
     private val viewModel: MainViewModel by viewModel {
         parametersOf(PODRetrofitImpl())
     }
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<ConstraintLayout>
-
+    private var isExpanded = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        binding = MainFragmentStartBinding.inflate(inflater, container, false)
+        binding = MainFragmentBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -49,7 +54,7 @@ class MainFragment : Fragment() {
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?): Unit = with(binding) {
         super.onViewCreated(view, savedInstanceState)
-        setBottomSheetBehavior(binding.bottomSheetContainer.root)
+        setBottomSheetBehavior(bottomSheetContainer.root)
         bottomSheetBehavior.addBottomSheetCallback(object :
             BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
@@ -69,16 +74,51 @@ class MainFragment : Fragment() {
         }
         setBottomAppBar(view)
         viewModel.liveData.observe(viewLifecycleOwner, { renderData(it) })
-        viewModel.getData(0)
         chipToday.setOnClickListener {
             viewModel.getData(0)
+            chipTransform(it)
         }
         chipYesterday.setOnClickListener {
             viewModel.getData(1)
+            chipTransform(it)
         }
         chipDayBeforeYesterday.setOnClickListener {
             viewModel.getData(2)
+            chipTransform(it)
         }
+        chipToday.performClick()
+        imageView.setOnClickListener {
+            isExpanded = !isExpanded
+            TransitionManager.beginDelayedTransition(
+                root, TransitionSet()
+                    .addTransition(ChangeBounds())
+                    .addTransition(ChangeImageTransform())
+            )
+            bottomSheetContainer.bottomSheetContainer.visibility = View.GONE
+            if (isExpanded) {
+                inputLayout.visibility = View.GONE
+                chipsLayout.visibility = View.GONE
+                main.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+                imageView.layoutParams.height = ViewGroup.LayoutParams.MATCH_PARENT
+                imageView.scaleType = ImageView.ScaleType.CENTER_CROP
+            } else {
+                inputLayout.visibility = View.VISIBLE
+                chipsLayout.visibility = View.VISIBLE
+                main.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                imageView.layoutParams.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                imageView.scaleType = ImageView.ScaleType.FIT_CENTER
+            }
+
+        }
+
+    }
+
+    private fun chipTransform(view: View) = with(binding) {
+        TransitionManager.beginDelayedTransition(root)
+        chipToday.visibility = View.VISIBLE
+        chipYesterday.visibility = View.VISIBLE
+        chipDayBeforeYesterday.visibility = View.VISIBLE
+        view.visibility = View.GONE
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

@@ -9,7 +9,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
-        applicationId "ru.s1aks.picoftheday"
+        applicationId "ru.gav1s.picoftheday2"
         minSdkVersion 21
         targetSdkVersion 30
         versionCode 1
